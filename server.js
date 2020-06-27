@@ -1,9 +1,10 @@
+// Required NPM Modules
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 const cTable = require("console.table");
 
+// Database connection
 console.log("get db connection");
-
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -20,7 +21,7 @@ connection.connect(function (err) {
   prompt();
 });
 
-// Initial prompt "What type of employee?"
+// Initial prompt "What action?"
 function promptUser() {
   return inquirer.prompt([
     {
@@ -42,7 +43,8 @@ function promptUser() {
     },
   ]);
 }
-// Add Department
+
+// Add Department Data Prompt
 function promptAddDepartment() {
   return inquirer.prompt([
     {
@@ -58,7 +60,7 @@ function promptAddDepartment() {
   ]);
 }
 
-// Add Role
+// Add Role Data Prompt
 function promptAddRole(res) {
   return inquirer.prompt ([
       {
@@ -85,7 +87,7 @@ function promptAddRole(res) {
   ]);
 }
 
-// // Add Employee
+// // Add Employee Data Prompt
 function promptAddEmployee(roles, employees) {
   return inquirer.prompt ([
       {
@@ -98,6 +100,7 @@ function promptAddEmployee(roles, employees) {
           name: "last_name",
           message: "What is the employee's last name?"
         },
+        // load role titles to choose from
         {
           type: "rawlist", 
           name: "role_title",
@@ -109,6 +112,7 @@ function promptAddEmployee(roles, employees) {
             },
           message: "Which role?"
         },
+        // load manager names to choose from
         {
           type: "rawlist", 
           name: "mgr_name",
@@ -123,9 +127,10 @@ function promptAddEmployee(roles, employees) {
   ]);
 }
 
-// // Select Employee
+// Propt for selecting an emaployee to update
 function promptSelectEmployee(employees) {
   return inquirer.prompt ([
+        // choices loaded with current employee last name
         {
           type: "rawlist", 
           name: "last_name",
@@ -140,9 +145,10 @@ function promptSelectEmployee(employees) {
   ]);
 }
 
-// // Select Role
+// Prompt for selecting the role to change in an employee update
 function promptSelectRole(roles) {
   return inquirer.prompt ([
+        // choices loaded with current role titles
         {
           type: "rawlist", 
           name: "title",
@@ -160,13 +166,13 @@ function promptSelectRole(roles) {
 // Main Function
 function prompt() {
 
-  // Prompt for initial 
+  // Call prompt for initial action
   promptUser().then(function (action) {
 
     // Switch initiates the righ type questions depending upon employee type
     switch (action.action) {
 
-      // Empployee Listing Report
+      // Empployee Listing Report Action
       case "View All Employees":
         var query = "select employee.first_name, employee.last_name, role.title, department.name FROM Employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.depart_ID = department.id";
         connection.query(query, function (err, res) {if (err) throw err;
@@ -176,7 +182,7 @@ function prompt() {
         });
         break;
 
-      // Empployee By Department Report
+      // Empployee By Department Report Action
       case "View Employees by Department":
         var query = "SELECT department.name, role.title, employee.first_name, employee.last_name FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.depart_ID = department.id ORDER BY department.id";
         connection.query(query, function (err, res) {if (err) throw err;
@@ -186,7 +192,7 @@ function prompt() {
         });
       break;
 
-      // Roles Listing Report
+      // Roles Listing Report Acton
       case "View All Roles":
         var query = "SELECT role.title, department.name FROM role INNER JOIN department ON department.id = role.depart_id";
         connection.query(query, function (err, res) {if (err) throw err;
@@ -196,7 +202,7 @@ function prompt() {
         });
       break;
 
-      // Department Listing Report     
+      // Department Listing Report Action
       case "View All Departments":
         var query = "SELECT name, long_name FROM department";
         connection.query(query, function (err, res) {if (err) throw err;
@@ -206,7 +212,7 @@ function prompt() {
         });
       break;
 
-      // // Add Employee      
+      // Add Employee Action 
       case "Add Employee": 
         
         var query1 = "SELECT * FROM role";
@@ -236,7 +242,7 @@ function prompt() {
         });
       break;
 
-      // Add Role      
+      // Add Role Action
       case "Add Role":
         var query = "SELECT * FROM department";
         connection.query (query, function (err, res1) {            
@@ -258,7 +264,7 @@ function prompt() {
         });
       break;
 
-      // Add Department      
+      // Add Department Action
       case "Add Department":
 
         promptAddDepartment().then(function (addDeptAnswers) {
@@ -273,7 +279,7 @@ function prompt() {
         });
       break;
 
-      // Update Employee Role
+      // Update Employee Role Action
       case "Update Employee Role":
                  
         var query1 = "SELECT * FROM employee";      
@@ -292,9 +298,11 @@ function prompt() {
                             var query4 = "SELECT id FROM role WHERE title = ?";
                             connection.query (query4, (selectedRole.title), function (err, res4) {if (err) throw err;
                                 
-                                var query = "UPDATE employee SET role_id = ? WHERE id = ?";
-                                connection.query(query, [{role_id: res4[0].id}, {id: res2[0].id}], function (err) {if (err) throw err;                  
-                                console.log("Department added succesfully");
+                                console.log(res4[0].id);
+                                console.log(res2[0].id);
+                                var query5 = "UPDATE employee SET role_id = ? WHERE id = ?";
+                                connection.query(query5, [res4[0].id, res2[0].id], function (err) {if (err) throw err;                  
+                                console.log("Role updated succesfully");
                                 prompt();
                                 });
                             });
@@ -303,7 +311,6 @@ function prompt() {
                 });
             });
         });
-
       break;
       
       // View Total Utlized Budet by Department     
@@ -316,7 +323,7 @@ function prompt() {
         });
       break;
       
-      // All done with employees; initiate HTML call and write file.   
+      // All done   
       default:
         console.log("All Done");
     }

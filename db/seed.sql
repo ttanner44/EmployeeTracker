@@ -49,3 +49,8 @@ INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Feather", "Hicks" , 6, 4);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Kim", "Boyd" , 3, 3);
+
+
+select * from employee;
+select * from role;
+select * from department
